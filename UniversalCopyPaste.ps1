@@ -5,6 +5,7 @@
 #requires -version 5.1
 param(
     [switch]$StartDisabled,
+    [switch]$TakeOverCtrlV,
     [switch]$CompileOnly
 )
 
@@ -65,12 +66,14 @@ namespace KitsuneTools
         private static SynchronizationContext uiContext;
         private static Mutex appMutex;
         private static volatile bool enabled = true;
+        private static volatile bool takeOverCtrlV = false;
         private static int copyRunning = 0;
         private static int pasteRunning = 0;
 
-        public static void Run(bool startEnabled)
+        public static void Run(bool startEnabled, bool shouldTakeOverCtrlV)
         {
             enabled = startEnabled;
+            takeOverCtrlV = shouldTakeOverCtrlV;
 
             bool createdNew;
             appMutex = new Mutex(true, "KitsuneTools.UniversalCopyPaste", out createdNew);
@@ -95,8 +98,8 @@ namespace KitsuneTools
 
             Log("Universal Copy/Paste is running.");
             Log("Ctrl+C: normal copy with fallback copy");
-            Log("Ctrl+V: universal text paste");
-            Log("Ctrl+Shift+V: native paste");
+            Log(takeOverCtrlV ? "Ctrl+V: universal text paste" : "Ctrl+V: native paste");
+            Log("Ctrl+Alt+V: universal text paste");
             Log("Ctrl+Alt+Shift+V: toggle universal copy/paste");
             Log("Ctrl+Alt+Shift+Esc: exit");
 
@@ -220,6 +223,16 @@ namespace KitsuneTools
                     return (IntPtr)1;
                 }
 
+                if (enabled && ctrl && alt && !shift && vkCode == VK_V)
+                {
+                    if (Interlocked.CompareExchange(ref pasteRunning, 1, 0) == 0)
+                    {
+                        Task.Run((Action)PasteClipboardTextAfterKeysRelease);
+                    }
+
+                    return (IntPtr)1;
+                }
+
                 if (enabled && ctrl && !shift && !alt && vkCode == VK_C)
                 {
                     uint before = GetClipboardSequenceNumber();
@@ -231,7 +244,7 @@ namespace KitsuneTools
                     return CallNextHookEx(hookId, nCode, wParam, lParam);
                 }
 
-                if (enabled && ctrl && !shift && !alt && vkCode == VK_V)
+                if (enabled && takeOverCtrlV && ctrl && !shift && !alt && vkCode == VK_V)
                 {
                     if (!IsClipboardFormatAvailable(CF_UNICODETEXT))
                     {
@@ -773,4 +786,4 @@ if ($CompileOnly.IsPresent) {
     return
 }
 
-[KitsuneTools.UniversalCopyPaste]::Run(-not $StartDisabled.IsPresent)
+[KitsuneTools.UniversalCopyPaste]::Run(-not $StartDisabled.IsPresent, $TakeOverCtrlV.IsPresent)
