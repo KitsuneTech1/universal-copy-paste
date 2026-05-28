@@ -5,6 +5,7 @@
 #requires -version 5.1
 param(
     [switch]$StartDisabled,
+    [switch]$TakeOverCtrlC,
     [switch]$TakeOverCtrlV,
     [switch]$CompileOnly
 )
@@ -66,13 +67,15 @@ namespace KitsuneTools
         private static SynchronizationContext uiContext;
         private static Mutex appMutex;
         private static volatile bool enabled = true;
+        private static volatile bool takeOverCtrlC = false;
         private static volatile bool takeOverCtrlV = false;
         private static int copyRunning = 0;
         private static int pasteRunning = 0;
 
-        public static void Run(bool startEnabled, bool shouldTakeOverCtrlV)
+        public static void Run(bool startEnabled, bool shouldTakeOverCtrlC, bool shouldTakeOverCtrlV)
         {
             enabled = startEnabled;
+            takeOverCtrlC = shouldTakeOverCtrlC;
             takeOverCtrlV = shouldTakeOverCtrlV;
 
             bool createdNew;
@@ -97,7 +100,8 @@ namespace KitsuneTools
             BuildTrayIcon();
 
             Log("Universal Copy/Paste is running.");
-            Log("Ctrl+C: normal copy with fallback copy");
+            Log(takeOverCtrlC ? "Ctrl+C: normal copy with fallback copy" : "Ctrl+C: native copy");
+            Log("Ctrl+Alt+C: backup copy");
             Log(takeOverCtrlV ? "Ctrl+V: universal text paste" : "Ctrl+V: native paste");
             Log("Ctrl+Alt+V: universal text paste");
             Log("Ctrl+Alt+Shift+V: toggle universal copy/paste");
@@ -223,6 +227,17 @@ namespace KitsuneTools
                     return (IntPtr)1;
                 }
 
+                if (enabled && ctrl && alt && !shift && vkCode == VK_C)
+                {
+                    uint before = GetClipboardSequenceNumber();
+                    if (Interlocked.CompareExchange(ref copyRunning, 1, 0) == 0)
+                    {
+                        Task.Run((Action)(() => BackupCopyAfterNativeCopy(before)));
+                    }
+
+                    return (IntPtr)1;
+                }
+
                 if (enabled && ctrl && alt && !shift && vkCode == VK_V)
                 {
                     if (Interlocked.CompareExchange(ref pasteRunning, 1, 0) == 0)
@@ -233,7 +248,7 @@ namespace KitsuneTools
                     return (IntPtr)1;
                 }
 
-                if (enabled && ctrl && !shift && !alt && vkCode == VK_C)
+                if (enabled && takeOverCtrlC && ctrl && !shift && !alt && vkCode == VK_C)
                 {
                     uint before = GetClipboardSequenceNumber();
                     if (Interlocked.CompareExchange(ref copyRunning, 1, 0) == 0)
@@ -280,16 +295,6 @@ namespace KitsuneTools
                     return;
                 }
 
-                if (TryRepeatedCtrlCCopy(originalSequence))
-                {
-                    return;
-                }
-
-                if (TryCtrlInsertCopy(originalSequence))
-                {
-                    return;
-                }
-
                 if (TryWmCopy(originalSequence))
                 {
                     return;
@@ -320,29 +325,6 @@ namespace KitsuneTools
 
                 Thread.Sleep(10);
             }
-        }
-
-        private static bool TryRepeatedCtrlCCopy(uint originalSequence)
-        {
-            for (int attempt = 0; attempt < 5; attempt++)
-            {
-                SendVirtualChord(VK_CONTROL, VK_C);
-
-                if (WaitForClipboardChange(originalSequence, 250))
-                {
-                    return true;
-                }
-
-                Thread.Sleep(60);
-            }
-
-            return false;
-        }
-
-        private static bool TryCtrlInsertCopy(uint originalSequence)
-        {
-            SendVirtualChord(VK_CONTROL, VK_INSERT);
-            return WaitForClipboardChange(originalSequence, 350);
         }
 
         private static bool TryWmCopy(uint originalSequence)
@@ -786,4 +768,4 @@ if ($CompileOnly.IsPresent) {
     return
 }
 
-[KitsuneTools.UniversalCopyPaste]::Run(-not $StartDisabled.IsPresent, $TakeOverCtrlV.IsPresent)
+[KitsuneTools.UniversalCopyPaste]::Run(-not $StartDisabled.IsPresent, $TakeOverCtrlC.IsPresent, $TakeOverCtrlV.IsPresent)
