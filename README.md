@@ -4,9 +4,8 @@ Windows tray utility for stubborn apps and Windows 11 missed-copy behavior.
 
 ## What It Does
 
-- `Ctrl+C` uses normal Windows/app copy first.
-- If the clipboard does not change, it retries real `Ctrl+C` up to five times.
-- If that still fails, it falls back to `Ctrl+Insert`, `WM_COPY`, and UI Automation selected-text copy.
+- `Ctrl+C` is left alone for normal/native copy.
+- `Ctrl+Alt+C` runs backup copy through app/API/accessibility methods.
 - `Ctrl+V` is left alone for normal/native paste.
 - `Ctrl+Alt+V` types the current text clipboard as keystrokes for fields that block normal paste.
 
@@ -26,7 +25,8 @@ Start-UniversalCopyPaste-Admin.cmd
 
 ## Controls
 
-- `Ctrl+C` = copy with retry/fallback
+- `Ctrl+C` = native copy
+- `Ctrl+Alt+C` = backup copy
 - `Ctrl+V` = native paste
 - `Ctrl+Alt+V` = universal plain-text paste
 - `Ctrl+Alt+Shift+V` = toggle the utility on/off
@@ -54,6 +54,7 @@ The backup copy path can only copy text that Windows, the target app, or the UI 
 
 Paste is plain text. Images and rich formatting use normal paste when the clipboard does not contain text. Be careful pasting multi-line commands into terminals, because this types keystrokes instead of using terminal paste guardrails.
 
-Plain `Ctrl+V` takeover is available only when explicitly starting the script with
-`-TakeOverCtrlV`. The default launcher does not use it because globally
-intercepting normal paste can break basic clipboard behavior in some apps.
+Plain `Ctrl+C` / `Ctrl+V` takeover is available only when explicitly starting
+the script with `-TakeOverCtrlC` or `-TakeOverCtrlV`. The default launcher does
+not use either because globally intercepting basic clipboard shortcuts can break
+normal behavior in some apps.
