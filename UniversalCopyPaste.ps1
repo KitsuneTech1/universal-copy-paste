@@ -141,6 +141,7 @@ namespace KitsuneTools
             }
             catch
             {
+                // No console attached (e.g. hidden launch); nothing to write to, safe to ignore.
             }
         }
 
@@ -622,28 +623,6 @@ namespace KitsuneTools
             return input;
         }
 
-        private static INPUT MakeVirtualKeyInput(int virtualKey, bool keyUp)
-        {
-            var input = new INPUT();
-            input.type = INPUT_KEYBOARD;
-            input.U.ki.wVk = (ushort)virtualKey;
-            input.U.ki.wScan = '\0';
-            input.U.ki.dwFlags = keyUp ? KEYEVENTF_KEYUP : 0;
-            input.U.ki.time = 0;
-            input.U.ki.dwExtraInfo = IntPtr.Zero;
-            return input;
-        }
-
-        private static void SendVirtualChord(int modifierVirtualKey, int keyVirtualKey)
-        {
-            var inputs = new List<INPUT>();
-            inputs.Add(MakeVirtualKeyInput(modifierVirtualKey, false));
-            inputs.Add(MakeVirtualKeyInput(keyVirtualKey, false));
-            inputs.Add(MakeVirtualKeyInput(keyVirtualKey, true));
-            inputs.Add(MakeVirtualKeyInput(modifierVirtualKey, true));
-            SendInputs(inputs);
-        }
-
         private static void SendInputs(List<INPUT> inputs)
         {
             INPUT[] array = inputs.ToArray();
@@ -678,16 +657,6 @@ namespace KitsuneTools
         }
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct KBDLLHOOKSTRUCT
-        {
-            public int vkCode;
-            public int scanCode;
-            public int flags;
-            public int time;
-            public IntPtr dwExtraInfo;
-        }
 
         [StructLayout(LayoutKind.Sequential)]
         private struct INPUT
