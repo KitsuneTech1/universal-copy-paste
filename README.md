@@ -32,18 +32,45 @@ A tray icon also gives you an enable/disable checkbox and an exit option.
 - Single instance only. Launching it twice just logs that it is already running.
 - Works entirely locally. No network calls, no telemetry.
 
-## Install
+## Run it yourself
 
-### One-click (recommended)
+### What you need
 
-1. Download or clone this repo.
-2. Run `Start-UniversalCopyPaste.cmd` to start it in the background.
-3. If you need it to paste into elevated/admin windows, run `Start-UniversalCopyPaste-Admin.cmd` instead (it will prompt for UAC).
-4. To have it start automatically at login, run `Install-UniversalCopyPaste-Startup.cmd`. This drops a shortcut in your Startup folder pointing at `Start-UniversalCopyPaste.cmd`.
+- **Windows 10 or 11.** That's it. PowerShell comes built in, there is nothing to install.
+- To check your Windows version: press `Win + R`, type `winver`, press Enter. It'll show you the version in a popup.
 
-### Manual
+### Step by step
 
-Run the script directly with PowerShell in STA mode:
+**Getting the files**
+
+If you have git, clone it:
+
+```powershell
+git clone https://github.com/KitsuneTech1/universal-copy-paste.git
+```
+
+If you don't have git, that's fine, no need to install it. On this page on GitHub, click the green **Code** button, then **Download ZIP**. Once it downloads, right-click the zip file and choose **Extract All**, then open the extracted folder.
+
+**Starting it**
+
+1. Open the folder in File Explorer (double-click it, or right-click the zip and Extract All first if you downloaded a zip).
+2. Double-click **`Start-UniversalCopyPaste.cmd`**. A window may flash briefly and disappear. That's normal, it's meant to run quietly in the background.
+3. Look at the bottom-right corner of your screen, in the system tray (the small icons near the clock). You may need to click the little up-arrow to show hidden icons. You should see a new tray icon for this tool.
+4. If you need it to work inside programs running "as administrator," double-click **`Start-UniversalCopyPaste-Admin.cmd`** instead. Windows will show a User Account Control popup asking for permission, click **Yes**.
+5. If you want it to start automatically every time you log into Windows, double-click **`Install-UniversalCopyPaste-Startup.cmd`**. A black window will show a short message and then say "Press any key to continue," press any key and it closes. This just places a shortcut in your Windows Startup folder, nothing else changes.
+
+**It worked if:** you see the tray icon near the clock, and pressing `Ctrl+Alt+C` then `Ctrl+Alt+V` in a text field copies and retypes your selected text.
+
+**Troubleshooting**
+
+- *Nothing happens when I double-click the .cmd file:* Windows sometimes blocks downloaded scripts. Right-click the `.cmd` file, choose **Properties**, and if you see an "Unblock" checkbox near the bottom, check it and click OK, then try again.
+- *No tray icon appears:* click the small up-arrow (^) near the clock to see hidden tray icons, it may just be tucked away there.
+- *It says the tool is "already running":* it only allows one copy at a time. Look for the existing tray icon, or restart your PC and try again.
+- *Pasting doesn't work in a specific app:* some apps (password fields, some remote-desktop sessions) block this on purpose. See the Limits section below.
+
+### Advanced: running it manually from PowerShell
+
+If you want to pass options instead of using the `.cmd` launchers, open PowerShell (right-click the Start button, choose **Windows Terminal** or **PowerShell**), `cd` into the folder you extracted, and run:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File .\UniversalCopyPaste.ps1
