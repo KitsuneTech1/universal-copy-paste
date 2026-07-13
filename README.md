@@ -4,7 +4,7 @@
 
 Backup copy and universal plain-text paste for Windows apps that block the normal clipboard shortcuts.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License: PolyForm Small Business](https://img.shields.io/badge/license-PolyForm%20Small%20Business-8250df.svg)](LICENSE)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white)](https://www.microsoft.com)
 
@@ -113,4 +113,4 @@ Plain `Ctrl+C` / `Ctrl+V` takeover only happens when you launch the script with 
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+PolyForm Small Business License 1.0.0. Copyright (c) 2026 Kitsune Technologies LLC. Free to use, modify, and share if you are an individual or a company with fewer than 100 people and under 1,000,000 USD in annual revenue. Larger organizations need a commercial license, contact Support@kitsunetechnologies.org. Full text in [LICENSE](LICENSE).
