@@ -77,11 +77,28 @@ Describe "Universal Copy/Paste launchers" {
 }
 
 Describe "Universal Copy/Paste compile smoke" {
-    It "compiles the inline helper in compile-only mode" {
-        $output = & powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File $mainScript -CompileOnly 2>&1
+    It "compiles on Windows and fails fast elsewhere" {
+        $powerShellExe = if ($PSVersionTable.PSEdition -eq "Core") {
+            (Get-Command pwsh).Source
+        } else {
+            (Get-Command powershell.exe).Source
+        }
+
+        $arguments = @("-NoProfile", "-ExecutionPolicy", "Bypass")
+        if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
+            $arguments += "-STA"
+        }
+
+        $arguments += @("-File", $mainScript, "-CompileOnly")
+        $output = & $powerShellExe @arguments 2>&1
         $exitCode = $LASTEXITCODE
 
-        $exitCode | Should Be 0
-        ($output -join "`n") | Should Match "UniversalCopyPaste compiled successfully"
+        if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
+            $exitCode | Should Be 0
+            ($output -join "`n") | Should Match "UniversalCopyPaste compiled successfully"
+        } else {
+            $exitCode | Should Not Be 0
+            ($output -join "`n") | Should Match "UniversalCopyPaste only supports Windows"
+        }
     }
 }
