@@ -3,3 +3,12 @@
 *.bak
 .DS_Store
 Thumbs.db
+
+.env
+node_modules/
+.venv/
+target/
+build/
+dist/
+out/
+.oss31/
