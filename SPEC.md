@@ -11,9 +11,9 @@
 - Authors: `AUTHORS.md` is present.
 - Build system: none. The script compiles inline C# with `Add-Type`.
 - Runtime: Windows PowerShell 5.1 or newer on Windows 10 or 11.
-- Tests: no Pester test suite yet. Current smoke check is `-CompileOnly`.
+- Tests: Pester smoke tests in `tests/`. Compile smoke check is `-CompileOnly`.
 - Dependencies: no package manager dependencies.
-- Current git state before this spec: `.gitignore` already has an uncommitted change adding `.oss31/`.
+- CI: GitHub Actions runs the Pester tests on Windows and Ubuntu.
 
 ## Smallest honest release
 
@@ -21,7 +21,7 @@ Feature list:
 
 1. Run as a tray utility on Windows with one active instance.
 2. Keep native `Ctrl+C` and `Ctrl+V` unchanged by default.
-3. Copy selected text with `Ctrl+Alt+C`, using native copy first, then focused control copy, then UI Automation selection text.
+3. Copy selected text with `Ctrl+Alt+C`, sending a copy command to the focused control, then falling back to UI Automation selection text.
 4. Paste clipboard text with `Ctrl+Alt+V` by typing Unicode keystrokes as plain text.
 5. Toggle the utility with `Ctrl+Alt+Shift+V` and exit with `Ctrl+Alt+Shift+Esc`.
 
@@ -59,9 +59,9 @@ Testing plan:
 
 ## Release blockers
 
-- `.gitignore` does not yet exclude `.env`, `node_modules`, `.venv`, `target`, or general build artifacts. It only excludes `.oss31/` in the current uncommitted edit.
-- Pester smoke tests are missing.
-- README still depends on manual verification for hotkey behavior.
+- `.gitignore` excludes `.env`, `node_modules`, `.venv`, `target`, build artifacts, and `.oss31/`.
+- Pester smoke tests pass locally with Pester 3.4.0 and run in CI with Pester 4.10.1.
+- Hotkey behavior is verified manually on a Windows desktop. It cannot be exercised from a non-interactive session.
 - No tracked secrets, private IPs, Windows user paths, or hardcoded private hostnames were found in release files.
 - No dead dependencies were found.
 - Compile smoke check passed with `-CompileOnly`.

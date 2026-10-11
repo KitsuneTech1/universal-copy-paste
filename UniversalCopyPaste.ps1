@@ -1,6 +1,7 @@
 # Universal Copy/Paste for Windows.
-# Ctrl+C stays normal. Ctrl+V types clipboard text as keystrokes so it works in
-# apps that block normal paste. Ctrl+Shift+V is left alone for native paste.
+# Ctrl+Alt+C copies the selection with fallbacks. Ctrl+Alt+V types clipboard text
+# as keystrokes so it works in apps that block normal paste. Native Ctrl+C and
+# Ctrl+V stay unchanged unless -TakeOverCtrlC or -TakeOverCtrlV is passed.
 
 #requires -version 5.1
 param(
@@ -186,7 +187,7 @@ namespace KitsuneTools
                 trayIcon.ShowBalloonTip(
                     900,
                     "Universal Copy/Paste",
-                    value ? "Ctrl+C backup copy and Ctrl+V universal paste are on." : "Ctrl+C/Ctrl+V are back to normal.",
+                    value ? "Backup copy and universal paste are on." : "Backup copy and universal paste are paused.",
                     ToolTipIcon.Info
                 );
             }
