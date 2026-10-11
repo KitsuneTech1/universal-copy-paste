@@ -89,6 +89,16 @@ Optional switches:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File .\UniversalCopyPaste.ps1 -CompileOnly
 ```
 
+### Smoke tests
+
+Run the Pester smoke tests before a release:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Pester -Script .\tests\UniversalCopyPaste.Tests.ps1 -EnableExit"
+```
+
+The tests check the release files, license text, launcher commands, ignore rules, and compile-only mode.
+
 ## How It Works
 
 The script compiles a small C# helper inline and installs a low-level keyboard hook (`WH_KEYBOARD_LL`) to watch for the hotkeys above. Everything else runs off that hook:
