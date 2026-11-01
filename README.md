@@ -84,6 +84,16 @@ Ctrl+Alt+Shift+V: toggle universal copy/paste
 Ctrl+Alt+Shift+Esc: exit
 ```
 
+## Run the tests
+
+The test suite uses Pester and does not access the network. On a machine with Pester already installed, run:
+
+```powershell
+powershell.exe -NoProfile -Command "Import-Module Pester; Invoke-Pester -Path .\tests -PassThru"
+```
+
+The suite checks the release files, launchers, documented user-path wiring, and the Windows-only compile path. The tray hotkeys still need the manual Notepad check below because they require an interactive Windows desktop.
+
 Then select text in another app, press `Ctrl+Alt+C`, focus a text field, and press `Ctrl+Alt+V`. It types the copied text as plain text.
 
 Quick self-test:
