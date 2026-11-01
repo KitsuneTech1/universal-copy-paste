@@ -626,8 +626,24 @@ namespace KitsuneTools
 
         private static void SendInputs(List<INPUT> inputs)
         {
+            if (inputs == null || inputs.Count == 0)
+            {
+                return;
+            }
+
             INPUT[] array = inputs.ToArray();
-            SendInput((uint)array.Length, array, Marshal.SizeOf(typeof(INPUT)));
+            uint sent = SendInput((uint)array.Length, array, Marshal.SizeOf(typeof(INPUT)));
+            EnsureAllInputsSent(sent, (uint)array.Length, Marshal.GetLastWin32Error());
+        }
+
+        private static void EnsureAllInputsSent(uint sent, uint requested, int errorCode)
+        {
+            if (sent != requested)
+            {
+                throw new InvalidOperationException(
+                    String.Format("SendInput delivered {0} of {1} input records (Win32 error {2}).", sent, requested, errorCode)
+                );
+            }
         }
 
         private static void PostToUi(Action action)
@@ -670,7 +686,32 @@ namespace KitsuneTools
         private struct InputUnion
         {
             [FieldOffset(0)]
+            public MOUSEINPUT mi;
+
+            [FieldOffset(0)]
             public KEYBDINPUT ki;
+
+            [FieldOffset(0)]
+            public HARDWAREINPUT hi;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MOUSEINPUT
+        {
+            public int dx;
+            public int dy;
+            public uint mouseData;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct HARDWAREINPUT
+        {
+            public uint uMsg;
+            public ushort wParamL;
+            public ushort wParamH;
         }
 
         [StructLayout(LayoutKind.Sequential)]
