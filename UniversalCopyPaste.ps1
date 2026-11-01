@@ -731,7 +731,12 @@ namespace KitsuneTools
 }
 '@
 
-Add-Type -ReferencedAssemblies @("System.Windows.Forms", "System.Drawing", "UIAutomationClient", "UIAutomationTypes") -TypeDefinition $source -Language CSharp
+$referencedAssemblies = @("System.Collections", "System.Threading", "System.Threading.Thread", "System.Threading.Tasks", "System.Diagnostics.Process", "System.ComponentModel.Primitives", "System.Console", "System.Windows.Forms", "System.Drawing", "UIAutomationClient", "UIAutomationTypes")
+if ($PSVersionTable.PSEdition -eq "Core") {
+    $referencedAssemblies += "System.Drawing.Common"
+}
+
+Add-Type -ReferencedAssemblies $referencedAssemblies -TypeDefinition $source -Language CSharp
 
 if ($CompileOnly.IsPresent) {
     Write-Host "UniversalCopyPaste compiled successfully."

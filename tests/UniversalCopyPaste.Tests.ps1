@@ -76,6 +76,21 @@ Describe "Universal Copy/Paste launchers" {
     }
 }
 
+Describe "Universal Copy/Paste user path wiring" {
+    It "maps the documented hotkeys to backup copy, paste, toggle, and exit" {
+        $script = Get-Content -Raw $mainScript
+
+        $script | Should Match "ctrl && alt && !shift && vkCode == VK_C"
+        $script | Should Match "BackupCopyAfterNativeCopy\(before\)"
+        $script | Should Match "ctrl && alt && !shift && vkCode == VK_V"
+        $script | Should Match "PasteClipboardTextAfterKeysRelease"
+        $script | Should Match "ctrl && alt && shift && vkCode == VK_V"
+        $script | Should Match "ToggleEnabled\(\)"
+        $script | Should Match "ctrl && alt && shift && vkCode == VK_ESCAPE"
+        $script | Should Match "Application\.Exit\(\)"
+    }
+}
+
 Describe "Universal Copy/Paste compile smoke" {
     It "compiles on Windows and fails fast elsewhere" {
         $powerShellExe = if ($PSVersionTable.PSEdition -eq "Core") {
