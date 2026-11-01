@@ -8,6 +8,29 @@ $startupInstaller = Join-Path $repoRoot "Install-UniversalCopyPaste-Startup.ps1"
 $startupLauncher = Join-Path $repoRoot "Install-UniversalCopyPaste-Startup.cmd"
 $licensePath = Join-Path $repoRoot "LICENSE"
 
+function Get-CompiledUniversalCopyPasteType {
+    if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
+        return $null
+    }
+
+    foreach ($assembly in [AppDomain]::CurrentDomain.GetAssemblies()) {
+        $type = $assembly.GetType("KitsuneTools.UniversalCopyPaste", $false)
+        if ($null -ne $type) {
+            return $type
+        }
+    }
+
+    & $mainScript -CompileOnly | Out-Null
+    foreach ($assembly in [AppDomain]::CurrentDomain.GetAssemblies()) {
+        $type = $assembly.GetType("KitsuneTools.UniversalCopyPaste", $false)
+        if ($null -ne $type) {
+            return $type
+        }
+    }
+
+    throw "Compile-only mode did not load the UniversalCopyPaste type."
+}
+
 Describe "Universal Copy/Paste repository" {
     It "includes the release files" {
         @(
@@ -66,6 +89,17 @@ Describe "Universal Copy/Paste launchers" {
         $launcher | Should Match "-STA"
     }
 
+    It "does not interpolate the repository path into PowerShell source" {
+        @($defaultLauncher, $adminLauncher) | ForEach-Object {
+            $launcher = Get-Content -Raw $_
+
+            $launcher | Should Not Match "%SCRIPT%"
+            $launcher | Should Match 'pushd "%~dp0"'
+            $launcher | Should Match "-WorkingDirectory \(Get-Location\)"
+            $launcher | Should Match "'-File','\.\\UniversalCopyPaste\.ps1'"
+        }
+    }
+
     It "installs a startup shortcut to the default launcher" {
         $installer = Get-Content -Raw $startupInstaller
         $launcher = Get-Content -Raw $startupLauncher
@@ -88,6 +122,52 @@ Describe "Universal Copy/Paste user path wiring" {
         $script | Should Match "ToggleEnabled\(\)"
         $script | Should Match "ctrl && alt && shift && vkCode == VK_ESCAPE"
         $script | Should Match "Application\.Exit\(\)"
+    }
+}
+
+Describe "Universal Copy/Paste native input handling" {
+    It "declares the native INPUT union at the platform size" {
+        $script = Get-Content -Raw $mainScript
+        $script | Should Match "private struct MOUSEINPUT"
+        $script | Should Match "private struct HARDWAREINPUT"
+
+        if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
+            $type = Get-CompiledUniversalCopyPasteType
+            $flags = [System.Reflection.BindingFlags]"NonPublic"
+            $inputType = $type.GetNestedType("INPUT", $flags)
+            $sizeMethod = [Runtime.InteropServices.Marshal].GetMethod(
+                "SizeOf",
+                [System.Reflection.BindingFlags]"Public,Static",
+                $null,
+                [type[]]@([type]),
+                $null
+            )
+            $size = $sizeMethod.Invoke($null, [object[]]@($inputType))
+            $expectedSize = if ([IntPtr]::Size -eq 8) { 40 } else { 28 }
+            $size | Should Be $expectedSize
+        }
+    }
+
+    It "throws when SendInput delivers only part of a request" {
+        $script = Get-Content -Raw $mainScript
+        $script | Should Match "EnsureAllInputsSent\(sent, \(uint\)array\.Length"
+
+        if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
+            $type = Get-CompiledUniversalCopyPasteType
+            $flags = [System.Reflection.BindingFlags]"NonPublic,Static"
+            $method = $type.GetMethod("EnsureAllInputsSent", $flags)
+            $threw = $false
+            $message = ""
+            try {
+                $method.Invoke($null, [object[]]@([uint32]1, [uint32]2, [int32]5)) | Out-Null
+            } catch {
+                $threw = $true
+                $message = $_.Exception.InnerException.Message
+            }
+
+            $threw | Should Be $true
+            $message | Should Match "SendInput delivered 1 of 2"
+        }
     }
 }
 
