@@ -1,10 +1,12 @@
 <p align="center"><a href="https://kitsunetechnologies.org/work"><img src="https://raw.githubusercontent.com/KitsuneTech1/.github/main/assets/kitsune-banner.svg" alt="Built by Kitsune Technologies" width="760"></a></p>
 
-# Universal Copy/Paste
+# Clipboard Rescue
 
 Windows hotkeys that copy anything and paste it as plain text, in every app.
 
-Universal Copy/Paste is a small PowerShell tray utility. `Ctrl+Alt+C` copies the selected text even when an app blocks normal copy. `Ctrl+Alt+V` types the clipboard as plain text keystrokes, so it works in fields and remote sessions that block normal paste. Your normal `Ctrl+C` and `Ctrl+V` stay untouched.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![PowerShell](https://img.shields.io/badge/PowerShell-5.1+-blue.svg)](https://learn.microsoft.com/en-us/powershell/)
+
+Clipboard Rescue (source repo: `universal-copy-paste`) is a small PowerShell tray utility. `Ctrl+Alt+C` copies the selected text even when an app blocks normal copy. `Ctrl+Alt+V` types the clipboard as plain text keystrokes, so it works in fields and remote sessions that block normal paste. Your normal `Ctrl+C` and `Ctrl+V` stay untouched.
 
 ## What it does
 
