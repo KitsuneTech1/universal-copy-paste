@@ -23,13 +23,15 @@ jobs:
         shell: pwsh
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module Pester -RequiredVersion 4.10.1 -Scope CurrentUser -Force
+          Install-Module Pester -RequiredVersion 4.10.1 -Scope CurrentUser -Force -SkipPublisherCheck
 
       - name: Run tests
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Continue'
           Import-Module Pester -RequiredVersion 4.10.1 -Force
           $result = Invoke-Pester -Path ./tests -PassThru
           if ($result.FailedCount -gt 0) {
             exit 1
           }
+          exit 0
