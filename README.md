@@ -1,154 +1,141 @@
 <p align="center"><a href="https://kitsunetechnologies.org/work"><img src="https://raw.githubusercontent.com/KitsuneTech1/.github/main/assets/kitsune-banner.svg" alt="Built by Kitsune Technologies" width="760"></a></p>
 
-# Clipboard Rescue
+# Clipboard Rescue (Universal Copy/Paste)
 
-Windows hotkeys that copy anything and paste it as plain text, in every app.
+> Windows hotkeys that copy anything and paste as plain text keystrokes into stubborn terminals, remote sessions, virtual machines, and copy-restricted apps.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![PowerShell](https://img.shields.io/badge/PowerShell-5.1+-blue.svg)](https://learn.microsoft.com/en-us/powershell/)
+<p align="center">
+  <a href="https://github.com/KitsuneTech1/universal-copy-paste/releases"><img src="https://img.shields.io/github/v/release/KitsuneTech1/universal-copy-paste?style=flat-square&color=blue" alt="Release"></a>
+  <a href="https://github.com/KitsuneTech1/universal-copy-paste/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/KitsuneTech1/universal-copy-paste/ci.yml?branch=main&label=CI&style=flat-square" alt="CI Status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License"></a>
+  <a href="https://learn.microsoft.com/powershell/"><img src="https://img.shields.io/badge/PowerShell-5.1+-5391FE?style=flat-square&logo=powershell&logoColor=white" alt="PowerShell"></a>
+  <a href="https://microsoft.com/windows"><img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows Platform"></a>
+  <a href="https://github.com/KitsuneTech1/universal-copy-paste"><img src="https://img.shields.io/badge/Network-100%25%20Offline-blueviolet?style=flat-square" alt="100% Local"></a>
+</p>
 
-Clipboard Rescue (source repo: `universal-copy-paste`) is a small PowerShell tray utility. `Ctrl+Alt+C` copies the selected text even when an app blocks normal copy. `Ctrl+Alt+V` types the clipboard as plain text keystrokes, so it works in fields and remote sessions that block normal paste. Your normal `Ctrl+C` and `Ctrl+V` stay untouched.
+<p align="center">
+  <a href="https://github.com/KitsuneTech1/universal-copy-paste/releases/latest"><strong>📦 Download Latest Release ZIP</strong></a> •
+  <a href="#-quick-start-no-setup-required"><strong>⚡ Quick Start Guide</strong></a>
+</p>
 
-## What it does
+---
 
-- Runs as a tray utility on Windows with one active instance.
+Clipboard Rescue (source repo: `universal-copy-paste`) is a small PowerShell tray utility:
+- **`Ctrl+Alt+C`** copies selected text even when an application disables normal copy by falling back to the Windows UI Automation tree.
+- **`Ctrl+Alt+V`** types the clipboard as plain-text keystrokes directly into fields, consoles, and remote sessions that block normal paste.
+- Your standard **`Ctrl+C` and `Ctrl+V` stay completely untouched**.
+
+---
+
+## Architecture & Keystroke Pipeline
+
+```mermaid
+flowchart TD
+    subgraph Hotkeys [Hotkeys Registered via SetWindowsHookEx]
+        A["Ctrl + Alt + C<br/>(Universal Copy)"]
+        B["Ctrl + Alt + V<br/>(Universal Paste)"]
+        C["Ctrl + Alt + Shift + V<br/>(Toggle Active)"]
+        D["Ctrl + Alt + Shift + Esc<br/>(Exit)"]
+    end
+
+    A --> E{Send WM_COPY}
+    E -->|App Handles Normally| F[Clipboard Buffer]
+    E -->|App Ignores / Blocks| G[UI Automation Selection Pattern]
+    G --> F
+
+    B --> H[Read Clipboard Text]
+    H --> I[Strip Rich Formats & Normalize Unicode]
+    I --> J[Synthesize Native Keystrokes via SendInput API]
+    J --> K[Target Window: VM, Console, Remote Desktop, Protected Input]
+```
+
+---
+
+## ⚡ What it does
+
+- Runs as a lightweight tray utility on Windows with a single active instance guard.
 - Keeps native `Ctrl+C` and `Ctrl+V` unchanged by default.
-- Copies selected text with `Ctrl+Alt+C`. It sends a copy command to the focused control, then falls back to reading the selection through UI Automation.
-- Pastes clipboard text with `Ctrl+Alt+V` by typing Unicode keystrokes as plain text. Formatting is dropped.
-- Toggles the utility with `Ctrl+Alt+Shift+V`.
-- Exits with `Ctrl+Alt+Shift+Esc`.
-- Runs entirely on your PC. No network calls, no telemetry.
+- Copies selected text with `Ctrl+Alt+C`: sends a copy command to the focused control, then falls back to reading through UI Automation.
+- Pastes clipboard text with `Ctrl+Alt+V` by typing Unicode keystrokes as plain text (formatting dropped).
+- Toggles utility on/off with `Ctrl+Alt+Shift+V`.
+- Cleanly exits with `Ctrl+Alt+Shift+Esc`.
+- Runs entirely on your PC. No network calls, no telemetry, 100% private.
 
-## What you need
+---
 
-- Windows 10 or Windows 11.
-- Windows PowerShell 5.1. It is included with Windows 10 and 11.
-- Git is optional. You can download a ZIP instead.
+## 🚀 Quick Start (No Setup Required)
 
-## Install
+### 1. Download & Launch
+1. Download [**Universal Copy/Paste ZIP**](https://github.com/KitsuneTech1/universal-copy-paste/releases/latest) and extract it.
+2. Double-click **`start.bat`** (or `Start-UniversalCopyPaste.cmd`).
+3. The launcher starts in the background and places an icon in your system tray near the clock.
 
-1. Get the files.
+### 2. Verify with Notepad (10-Second Test)
+1. Open Notepad and type a line of text.
+2. Select the line and press **`Ctrl+Alt+C`**.
+3. Press `End`, then `Enter`, then **`Ctrl+Alt+V`**.
+4. The exact same line appears again, typed automatically as native keystrokes.
 
-With Git:
+> **Tip for Admin Windows**: If the target app runs as Administrator, use **`Start-UniversalCopyPaste-Admin.cmd`** so the hook has elevation permissions to deliver keystrokes.
 
-```powershell
-git clone https://github.com/KitsuneTech1/universal-copy-paste.git
-```
+---
 
-Expected output starts like this:
+## ⚙️ Configuration & Options
 
-```text
-Cloning into 'universal-copy-paste'...
-```
+### Run at Windows Startup
+Double-click `Install-UniversalCopyPaste-Startup.cmd`. It places a shortcut in your user Startup folder (`shell:startup`). Nothing else is modified.
 
-Without Git: on the GitHub page, click the green **Code** button, then **Download ZIP**. Right-click the ZIP file and choose **Extract All**. The extracted folder is named `universal-copy-paste-main`. Use that name in the next step.
-
-2. Open PowerShell and enter the folder.
-
-```powershell
-cd universal-copy-paste
-```
-
-Expected output: none. The prompt now shows the folder path.
-
-3. Check that the script compiles.
+### CLI Switches
+Launch from PowerShell with custom switches:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File .\UniversalCopyPaste.ps1 -CompileOnly
+powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File .\UniversalCopyPaste.ps1 -TakeOverCtrlV
 ```
 
-Expected output:
+- `-TakeOverCtrlV`: Makes plain `Ctrl+V` run plain text typing paste.
+- `-TakeOverCtrlC`: Makes plain `Ctrl+C` run backup copy.
+- `-StartDisabled`: Starts with hotkeys paused (toggle on with `Ctrl+Alt+Shift+V`).
+- `-CompileOnly`: Checks C# P/Invoke compilation and exits immediately.
 
-```text
-UniversalCopyPaste compiled successfully.
-```
+---
 
-## Use it
+## 🧪 Testing
 
-Double-click `Start-UniversalCopyPaste.cmd` in File Explorer. A console window may flash and close. That is normal. The utility runs hidden and prints nothing. Look for its icon in the tray near the clock.
-
-Use `Start-UniversalCopyPaste-Admin.cmd` instead if the app you want to paste into runs as administrator. Windows shows a User Account Control prompt. Click **Yes**.
-
-To see the startup messages, start it from PowerShell instead:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File .\UniversalCopyPaste.ps1
-```
-
-You should see this output:
-
-```text
-Universal Copy/Paste is running.
-Ctrl+C: native copy
-Ctrl+Alt+C: backup copy
-Ctrl+V: native paste
-Ctrl+Alt+V: universal text paste
-Ctrl+Alt+Shift+V: toggle universal copy/paste
-Ctrl+Alt+Shift+Esc: exit
-```
-
-## Run the tests
-
-The test suite uses Pester and does not access the network. On a machine with Pester already installed, run:
+Run the included offline Pester test suite:
 
 ```powershell
 powershell.exe -NoProfile -Command "Import-Module Pester; Invoke-Pester -Path .\tests -PassThru"
 ```
 
-The suite checks the release files, launchers, documented user-path wiring, and the Windows-only compile path. The tray hotkeys still need the manual Notepad check below because they require an interactive Windows desktop.
+The suite validates:
+- Presence of release launchers and startup scripts.
+- Memory layout of the 32-bit and 64-bit native `INPUT` union for `SendInput`.
+- Safe path handling (no path interpolation into PowerShell execution strings).
+- User path wiring and hotkey mappings.
 
-Then select text in another app, press `Ctrl+Alt+C`, focus a text field, and press `Ctrl+Alt+V`. It types the copied text as plain text.
+---
 
-Quick self-test:
+## 🔧 Troubleshooting
 
-1. Open Notepad and type a line of text.
-2. Select the line and press `Ctrl+Alt+C`.
-3. Press `End`, then `Enter`, then `Ctrl+Alt+V`.
-4. The same line appears again, typed as keystrokes.
+- **`UniversalCopyPaste.ps1 cannot be loaded because running scripts is disabled`**: Launch using `start.bat` or use `-ExecutionPolicy Bypass` as shown in the commands above.
+- **Nothing happens when double-clicking `.cmd`**: Right-click the `.cmd` file, select **Properties**, check **Unblock**, and click **OK**.
+- **`UniversalCopyPaste only supports Windows`**: Requires Windows 10 or 11 with PowerShell 5.1.
+- **`Universal Copy/Paste is already running`**: Only one copy can run at a time. Check the tray icon near the clock or press `Ctrl+Alt+Shift+Esc` to exit.
+- **`Could not install the keyboard hook`**: Ensure you start PowerShell normally. If target app is elevated, use `Start-UniversalCopyPaste-Admin.cmd`.
+- **Paste does nothing in one app**: Some protected security fields (e.g. anti-cheat, secure credential entry) intentionally block synthetic keystrokes.
 
-## It worked if ...
+---
 
-- You see a tray icon near the Windows clock. Click the small up arrow near the clock if it is hidden.
-- The self-test above repeats your line in Notepad.
-- `Ctrl+C` and `Ctrl+V` still behave normally.
+## 🔒 Security & Privacy Model
 
-## Run at startup
+- **100% Local**: No network sockets opened, zero outbound traffic.
+- **Password Protection**: UI Automation selection patterns honor Windows accessibility bounds and will not expose masked password fields.
+- **Safe Hotkeys**: Hotkeys pass through unhandled keys without input latency.
 
-Double-click `Install-UniversalCopyPaste-Startup.cmd`. It places a shortcut to `Start-UniversalCopyPaste.cmd` in your Startup folder. Nothing else changes.
-
-## Options
-
-Pass these switches when you start the script from PowerShell:
-
-- `-StartDisabled` starts with the hotkeys paused. Toggle them on with `Ctrl+Alt+Shift+V`.
-- `-TakeOverCtrlC` makes plain `Ctrl+C` also run the backup copy.
-- `-TakeOverCtrlV` makes plain `Ctrl+V` also run the plain text paste.
-- `-CompileOnly` checks that the script compiles, then exits.
-
-## Troubleshooting
-
-- `UniversalCopyPaste.ps1 cannot be loaded because running scripts is disabled on this system.` Run the command from this README. It uses `-ExecutionPolicy Bypass` for this process only.
-- Nothing happens when you double-click a `.cmd` file. Windows sometimes blocks downloaded scripts. Right-click the file, choose **Properties**, check **Unblock** if it is shown, click **OK**, and try again. If there is no **Unblock** box, start it from PowerShell with the command above.
-- `UniversalCopyPaste only supports Windows.` Run it on Windows 10 or 11. This tool does not run on macOS or Linux.
-- `Universal Copy/Paste is already running.` Only one copy can run at a time. Use the tray icon that is already near the clock, or press `Ctrl+Alt+Shift+Esc` to exit it.
-- `Could not install the keyboard hook.` Start PowerShell normally and try again. If the target app runs as administrator, use `Start-UniversalCopyPaste-Admin.cmd`.
-- Paste does nothing in one app. Some apps block synthetic keystrokes on purpose, such as password fields and some remote desktop clients.
-
-## Limits
-
-- Backup copy can only read text that the app or UI Automation exposes. Password fields and apps that hide their text stay protected.
-- Paste is plain text only. If the clipboard has no text, `Ctrl+Alt+V` does nothing.
-- Pasting multi-line text into a terminal types each line and presses Enter. Check the clipboard first.
-
-## Uninstall
-
-1. Exit the tray icon, or press `Ctrl+Alt+Shift+Esc`.
-2. If you installed the startup shortcut, delete `Universal Copy Paste.lnk` from your Startup folder. Press `Win+R`, type `shell:startup`, press Enter.
-3. Delete the folder.
+---
 
 ## License
 
-MIT. Copyright (c) 2026 Kitsune Technologies LLC. Do what you like with it, commercially or otherwise, just keep the copyright notice. Full text in [LICENSE](LICENSE).
-
----
+MIT. Copyright (c) 2026 Kitsune Technologies LLC. Full text in [LICENSE](LICENSE).
 
 <p align="center"><sub>Part of <b>Buildtober 2026</b>: 31 open source projects in 31 days. Built by <a href="https://kitsunetechnologies.org/work">Kitsune Technologies</a>. More at <a href="https://github.com/KitsuneTech1">github.com/KitsuneTech1</a>.</sub></p>
